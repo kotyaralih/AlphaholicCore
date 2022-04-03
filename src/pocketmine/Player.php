@@ -775,7 +775,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 		$this->teleport($pos);
 
 		$this->spawnToAll();
-		
+
 		if($this->getHealth() <= 0){
 			$pk = new RespawnPacket();
 			$pos = $this->getSpawn();
@@ -1821,7 +1821,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 					$valid = false;
 				}
 				for($i = 0; $i < $len and $valid; ++$i){
-					$c = ord($packet->username{$i});
+					$c = ord($packet->username[$i]);
 					if(($c >= ord("a") and $c <= ord("z")) or
 						($c >= ord("A") and $c <= ord("Z")) or
 						($c >= ord("0") and $c <= ord("9")) or $c === ord("_")

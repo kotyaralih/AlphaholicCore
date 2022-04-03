@@ -120,7 +120,7 @@ abstract class BaseFullChunk implements FullChunk{
 
 		for($x = 0; $x < 16; ++$x){
 			for($z = 0; $z < 16; ++$z){
-				$biome = Biome::getBiome(ord($data{($z << 4) + $x}));
+				$biome = Biome::getBiome(ord($data[($z << 4) + $x]));
 				$this->setBiomeId($x, $z, $biome->getId());
 				$c = $biome->getColor();
 				$this->setBiomeColor($x, $z, $c >> 16, ($c >> 8) & 0xff, $c & 0xff);
@@ -300,7 +300,7 @@ abstract class BaseFullChunk implements FullChunk{
 
 		$column = $this->getBlockIdColumn($x, $z);
 		for($y = 127; $y >= 0; --$y){
-			if($column{$y} !== "\x00"){
+			if($column[$y] !== "\x00"){
 				$this->setHeightMap($x, $z, $y);
 				return $y;
 			}

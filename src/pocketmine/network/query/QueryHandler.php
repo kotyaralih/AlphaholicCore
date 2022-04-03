@@ -65,7 +65,7 @@ class QueryHandler{
 
 	public function regenerateToken(){
 		$this->lastToken = $this->token;
-		$this->token = @Utils::getRandomBytes(16, false);
+		$this->token = random_bytes(16);
 	}
 
 	public static function getTokenString($token, $salt){
@@ -74,7 +74,7 @@ class QueryHandler{
 
 	public function handle($address, $port, $packet){
 		$offset = 2;
-		$packetType = ord($packet{$offset++});
+		$packetType = ord($packet[$offset++]);
 		$sessionID = Binary::readInt(substr($packet, $offset, 4));
 		$offset += 4;
 		$payload = substr($packet, $offset);

@@ -233,7 +233,7 @@ class RakLibInterface implements ServerInstance, AdvancedSourceInterface{
 	}
 
 	private function getPacket($buffer){
-		$pid = ord($buffer{1}); // #blameshoghi
+		$pid = ord($buffer[1]); // #blameshoghi
 
 		if(($data = $this->network->getPacket($pid)) === null){
 			return null;
