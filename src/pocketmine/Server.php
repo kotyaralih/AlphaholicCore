@@ -570,7 +570,7 @@ class Server{
 	public function getLevelMetadata(){
 		return $this->levelMetadata;
 	}
-
+        /**
 	 * @return PluginManager
 	 */
 	public function getPluginManager(){
