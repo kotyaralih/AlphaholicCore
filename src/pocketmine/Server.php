@@ -100,7 +100,6 @@ use pocketmine\plugin\PluginLoadOrder;
 use pocketmine\plugin\PluginManager;
 use pocketmine\plugin\ScriptPluginLoader;
 use pocketmine\scheduler\FileWriteTask;
-use pocketmine\scheduler\SendUsageTask;
 use pocketmine\scheduler\ServerScheduler;
 use pocketmine\tile\Chest;
 use pocketmine\tile\EnchantTable;
@@ -108,7 +107,6 @@ use pocketmine\tile\Furnace;
 use pocketmine\tile\Sign;
 use pocketmine\tile\Skull;
 use pocketmine\tile\Tile;
-use pocketmine\updater\AutoUpdater;
 use pocketmine\utils\Binary;
 use pocketmine\utils\Config;
 use pocketmine\utils\LevelException;
@@ -154,9 +152,6 @@ class Server{
 
 	private $profilingTickRate = 20;
 
-	/** @var AutoUpdater */
-	private $updater = null;
-
 	/** @var ServerScheduler */
 	private $scheduler = null;
 
@@ -171,8 +166,6 @@ class Server{
 	private $useAverage = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 	private $maxTick = 20;
 	private $maxUse = 0;
-
-	private $sendUsageTicker = 0;
 
 	private $dispatchSignals = false;
 
@@ -578,14 +571,6 @@ class Server{
 		return $this->levelMetadata;
 	}
 
-	/**
-	 * @return AutoUpdater
-	 */
-	public function getUpdater(){
-		return $this->updater;
-	}
-
-	/**
 	 * @return PluginManager
 	 */
 	public function getPluginManager(){
@@ -1579,8 +1564,6 @@ class Server{
 
 			$this->pluginManager->loadPlugins($this->pluginPath);
 
-			$this->updater = new AutoUpdater($this, $this->getProperty("auto-updater.host", "www.pocketmine.net"));
-
 			$this->enablePlugins(PluginLoadOrder::STARTUP);
 
 			LevelProviderManager::addProvider($this, Anvil::class);
@@ -1934,9 +1917,6 @@ class Server{
 		}
 
 		try{
-			if(!$this->isRunning()){
-				$this->sendUsage(SendUsageTask::TYPE_CLOSE);
-			}
 
 			$this->hasStopped = true;
 
@@ -2006,12 +1986,6 @@ class Server{
 		foreach($this->getIPBans()->getEntries() as $entry){
 			$this->network->blockAddress($entry->getName(), -1);
 		}
-
-		if($this->getProperty("settings.send-usage", true)){
-			$this->sendUsageTicker = 6000;
-			$this->sendUsage(SendUsageTask::TYPE_OPEN);
-		}
-
 
 		if($this->getProperty("network.upnp-forwarding", false) == true){
 			$this->logger->info("[UPnP] Trying to port forward...");
@@ -2085,9 +2059,6 @@ class Server{
 	public function crashDump(){
 		if($this->isRunning === false){
 			return;
-		}
-		if($this->sendUsageTicker > 0){
-			$this->sendUsage(SendUsageTask::TYPE_CLOSE);
 		}
 		$this->hasStopped = false;
 
@@ -2164,9 +2135,6 @@ class Server{
 	}
 
 	public function onPlayerLogin(Player $player){
-		if($this->sendUsageTicker > 0){
-			$this->uniquePlayers[$player->getRawUniqueId()] = $player->getRawUniqueId();
-		}
 
 		$this->sendFullPlayerListData($player);
 		$this->sendRecipeList($player);
@@ -2300,12 +2268,6 @@ class Server{
 		}
 	}
 
-	public function sendUsage($type = SendUsageTask::TYPE_STATUS){
-		$this->scheduler->scheduleAsyncTask(new SendUsageTask($this, $type, $this->uniquePlayers));
-		$this->uniquePlayers = [];
-	}
-
-
 	/**
 	 * @return BaseLang
 	 */
@@ -2435,11 +2397,6 @@ class Server{
 		if($this->autoSave and ++$this->autoSaveTicker >= $this->autoSaveTicks){
 			$this->autoSaveTicker = 0;
 			$this->doAutoSave();
-		}
-
-		if($this->sendUsageTicker > 0 and --$this->sendUsageTicker === 0){
-			$this->sendUsageTicker = 6000;
-			$this->sendUsage(SendUsageTask::TYPE_STATUS);
 		}
 
 		if(($this->tickCounter % 100) === 0){
